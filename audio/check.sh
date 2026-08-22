@@ -67,7 +67,10 @@ integrated_loudness() {
 # absolute RMS against the reference doesn't work).
 band_ratio_db() {
   local file="$1" freq="$2"
-  awk "BEGIN { print $(rms_db "$file" "$freq") - $(rms_db "$file") }"
+  local band broadband
+  band="$(rms_db "$file" "$freq")"
+  broadband="$(rms_db "$file")"
+  awk -v b="$band" -v bb="$broadband" 'BEGIN { print b - bb }'
 }
 
 shopt -s nullglob

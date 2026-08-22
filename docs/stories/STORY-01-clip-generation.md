@@ -225,11 +225,14 @@ dependency added to the repo by this step):
      → write to the filename convention above.
 3. Write `audio/check.sh <dir> <ext>`:
    - AC5 (duration): `ffprobe`/ffmpeg duration per file, assert 2.5s ± 0.05s.
-   - AC6 (peak): `astats` Peak level dB per file, assert ≤ -1.0 dBFS (well
-     under 0, matches the ~6dB headroom observed).
-   - AC4 (loudness match): integrated loudness per file (`ebur128` or
-     `loudnorm ... print_format=json` measure pass), assert max-min spread
-     across all files in the dir ≤ 0.5 LU.
+   - AC4/AC6 share one `loudnorm ... print_format=json` measure pass per
+     file: `input_tp` (true peak) for AC6, `input_i` (integrated loudness)
+     for AC4. True peak, not `astats` Peak level dB, is used for AC6 because
+     `astats`' sample peak can under-read true peak by a fraction of a dB.
+   - AC6 (peak): true peak per file, assert ≤ -1.0 dBFS (well under 0,
+     matches the ~6dB headroom observed).
+   - AC4 (loudness match): integrated loudness per file, assert max-min
+     spread across all files in the dir ≤ 0.5 LU.
    - AC2/AC3 (band + monotonic): for each file, parse (F, gain) from the
      filename and compute `ratio_dB = bandpass_RMS_dB - broadband_RMS_dB`
      (bandpass via `bandpass=f=F:width_type=o:width=1` + `astats`, broadband
