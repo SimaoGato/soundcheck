@@ -19,9 +19,16 @@ SAMPLE_RATE=48000
 DURATION=2.5
 SEED=42
 # One octave wide, constant across all bands, so difficulty is set by gain
-# alone (per the story's technical notes).
+# alone (per the story's technical notes). Must be kept equal to check.sh's
+# BAND_WIDTH_TYPE/BAND_WIDTH — there is no shared source of truth between
+# the two files.
 WIDTH_TYPE=o
 WIDTH=1
+# check.sh's loudnorm measurement pass (integrated_loudness/true_peak_db)
+# reads input_i/input_tp, which loudnorm measures from the actual audio and
+# doesn't depend on the I/TP/LRA target below, so the two files' loudnorm
+# targets don't need to match — noted here only so a future reader doesn't
+# assume they must.
 LOUDNORM="loudnorm=I=-18:TP=-1.5:LRA=7:linear=true"
 
 command -v ffmpeg >/dev/null 2>&1 || { echo "ffmpeg not found — install ffmpeg" >&2; exit 1; }

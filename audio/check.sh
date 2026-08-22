@@ -17,7 +17,9 @@ DURATION_TOLERANCE=0.05
 PEAK_MAX_DB=-1.0
 LOUDNESS_SPREAD_MAX_LU=0.5
 # One-octave-wide band centred on F, matching generate.sh's equalizer width
-# so the check measures exactly the band that was boosted/cut.
+# so the check measures exactly the band that was boosted/cut. Must be kept
+# equal to generate.sh's WIDTH_TYPE/WIDTH — there is no shared source of
+# truth between the two files.
 BAND_WIDTH_TYPE=o
 BAND_WIDTH=1
 
@@ -39,16 +41,22 @@ rms_db() {
     | grep "RMS level dB" | tail -1 | grep -oE '[-0-9.]+$'
 }
 
-peak_db() {
-  ffmpeg -hide_banner -nostats -i "$1" -af astats=metadata=0 -f null - 2>&1 \
-    | grep "Peak level dB" | tail -1 | grep -oE '[-0-9.]+$'
+# loudnorm's own measurement pass gives both integrated loudness and true
+# peak in one JSON blob (input_i, input_tp), so both AC4 and AC6 are read
+# from a single ffmpeg invocation instead of two separately-configured ones.
+# input_tp is an oversampled/inter-sample true-peak estimate; astats' "Peak
+# level dB" is only the sample peak and can under-read true peak by a
+# fraction of a dB, so it isn't used for the AC6 assertion.
+loudnorm_measure() {
+  ffmpeg -hide_banner -nostats -i "$1" -af loudnorm=I=-18:TP=-1.5:LRA=7:print_format=json -f null - 2>&1
 }
 
-# loudnorm's own measurement pass gives integrated loudness without a
-# second, separately-configured ebur128 invocation.
+true_peak_db() {
+  grep '"input_tp"' <<< "$1" | grep -oE '\-?[0-9.]+'
+}
+
 integrated_loudness() {
-  ffmpeg -hide_banner -nostats -i "$1" -af loudnorm=I=-18:TP=-1.5:LRA=7:print_format=json -f null - 2>&1 \
-    | grep '"input_i"' | grep -oE '\-?[0-9.]+'
+  grep '"input_i"' <<< "$1" | grep -oE '\-?[0-9.]+'
 }
 
 # Band-to-broadband RMS ratio: gain-invariant, so it isolates the EQ's
@@ -92,14 +100,17 @@ for file in "${files[@]}"; do
     failures+=("$name: duration ${dur}s outside ${DURATION_TARGET}s +/- ${DURATION_TOLERANCE}s")
   fi
 
+  # AC4/AC6 share one loudnorm measurement pass per file.
+  measure="$(loudnorm_measure "$file")"
+
   # AC6: true peak headroom
-  peak="$(peak_db "$file")"
+  peak="$(true_peak_db "$measure")"
   if ! awk -v p="$peak" -v max="$PEAK_MAX_DB" 'BEGIN { exit !(p <= max) }'; then
-    failures+=("$name: peak ${peak}dB exceeds ${PEAK_MAX_DB}dB headroom limit")
+    failures+=("$name: true peak ${peak}dB exceeds ${PEAK_MAX_DB}dB headroom limit")
   fi
 
   # AC4: collect integrated loudness, spread checked after the loop
-  loud="$(integrated_loudness "$file")"
+  loud="$(integrated_loudness "$measure")"
   if [ -z "$min_loudness" ] || awk -v l="$loud" -v m="$min_loudness" 'BEGIN { exit !(l < m) }'; then
     min_loudness="$loud"
   fi
