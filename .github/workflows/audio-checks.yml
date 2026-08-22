@@ -1,0 +1,30 @@
+name: audio-checks
+
+on:
+  pull_request:
+    paths:
+      - "audio/**"
+      - ".github/workflows/audio-checks.yml"
+  push:
+    branches: [main]
+    paths:
+      - "audio/**"
+      - ".github/workflows/audio-checks.yml"
+
+jobs:
+  generate-and-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install ffmpeg
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+
+      - name: Generate clip matrix (AC1, AC7)
+        run: ./audio/generate.sh --verify
+
+      - name: Check clip matrix (AC2-AC6)
+        run: ./audio/check.sh audio/output/wav wav
+
+      - name: check.sh unit test
+        run: ./audio/check.band_ratio_db.test.sh
