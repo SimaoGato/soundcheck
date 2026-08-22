@@ -203,6 +203,13 @@ dependency added to the repo by this step):
    STORY-02's technical notes say it will reuse this script against encoded
    AAC output — ffmpeg decodes `.m4a` transparently through the same filter
    chain, so no branching is needed inside the script for that reuse to work.
+   `reference.wav` is resolved as `dirname <dir>/reference.wav` — i.e. one
+   directory level above `<dir>`, matching the output layout in decision #3
+   where `reference.wav` sits next to (not inside) the per-format clip
+   directory. STORY-02 must place its encoded output at
+   `audio/output/<format>/` (a sibling of `wav/`, both directly under
+   `audio/output/`) for this resolution to find the same `reference.wav`
+   without changes to `check.sh`.
 
 ### Steps
 
