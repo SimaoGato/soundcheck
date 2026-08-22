@@ -6,6 +6,9 @@
 #
 # Usage: check.sh <dir> <ext>
 #   e.g. check.sh audio/output/wav wav
+# reference.wav is resolved as dirname(<dir>)/reference.wav — one directory
+# level above <dir> (see STORY-01's design decision #6 for the contract this
+# depends on).
 set -euo pipefail
 
 DIR="${1:?usage: check.sh <dir> <ext>}"
