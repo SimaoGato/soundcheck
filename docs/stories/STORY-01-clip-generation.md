@@ -144,12 +144,12 @@ dependency added to the repo by this step):
   reference gain state is chosen later.
 - **Re-validated with real numbers at 1000Hz** (reference is the unprocessed
   pink-noise buffer, no `loudnorm`): ratios in dB, +9 → -9:
-  `+9: -5.30, +6: -6.73, +3: -8.24, [[ref: -9.75]], -3: -11.09, -6: -12.32,
+  `+9: -5.30, +6: -6.73, +3: -8.24, (ref: -9.75), -3: -11.09, -6: -12.32,
   -9: -13.39` — strictly monotonic, reference sits correctly between +3 and
   -3, boost clips all > reference, cut clips all < reference. This is the
   data that actually satisfies AC2/AC3, replacing the retracted point above.
 - **Re-validated at the 31Hz edge** (the technical notes' flagged risk case):
-  `+9: -5.81, +6: -7.21, +3: -8.68, [[ref: -10.15]], -3: -11.46, -6: -12.66,
+  `+9: -5.81, +6: -7.21, +3: -8.68, (ref: -10.15), -3: -11.46, -6: -12.66,
   -9: -13.73` — same clean, strictly monotonic, well-separated pattern, ref
   correctly bracketed between +3 and -3. 16kHz was not independently
   re-validated with the ratio metric (only checked pre-normalization in the
