@@ -18,7 +18,15 @@ REF="$(dirname "$DIR")/reference.wav"
 DURATION_TARGET=2.5
 DURATION_TOLERANCE=0.05
 PEAK_MAX_DB=-1.0
-LOUDNESS_SPREAD_MAX_LU=0.5
+# 0.5 was tight enough for the lossless WAV matrix (STORY-01 measured a
+# 0.07LU spread there) but too tight once STORY-02 points this script at
+# lossy AAC output: encoding introduces small, non-systematic per-clip
+# quantization noise that loudnorm's measurement picks up, and the real
+# 60-clip AAC run measured a 0.53LU spread — still comfortably inaudible
+# (well under the ~1dB JND for loudness) but over the WAV-calibrated
+# threshold. Widened with headroom above the measured value rather than
+# tuned to just clear it.
+LOUDNESS_SPREAD_MAX_LU=0.7
 # One-octave-wide band centred on F, matching generate.sh's equalizer width
 # so the check measures exactly the band that was boosted/cut. Must be kept
 # equal to generate.sh's WIDTH_TYPE/WIDTH — there is no shared source of
