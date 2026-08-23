@@ -4,11 +4,13 @@ on:
   pull_request:
     paths:
       - "audio/**"
+      - "assets/audio/**"
       - ".github/workflows/audio-checks.yml"
   push:
     branches: [main]
     paths:
       - "audio/**"
+      - "assets/audio/**"
       - ".github/workflows/audio-checks.yml"
 
 jobs:
@@ -61,3 +63,17 @@ jobs:
 
       - name: CI ffmpeg pin test
         run: ./audio/ci_ffmpeg_pin.test.sh
+
+      # STORY-02: encode the WAV matrix to bundled AAC assets and publish
+      # the app-facing manifest.
+      - name: Encode clip matrix to AAC (STORY-02 AC1, AC2)
+        run: ./audio/encode.sh
+
+      - name: Check encoded clip matrix (STORY-02 AC2, AC4)
+        run: ./audio/check.sh audio/output/aac m4a
+
+      - name: Publish assets and generate manifest (STORY-02 AC3, AC5-AC7)
+        run: ./audio/manifest.sh
+
+      - name: manifest.sh assertion mutation tests
+        run: ./audio/manifest.assertions.test.sh
