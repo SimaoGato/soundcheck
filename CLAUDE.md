@@ -103,4 +103,8 @@ instead of only running scripted API/CLI checks.
 
 ## Conventions & gotchas
 
-<!-- codifier appends here after each promoted story. Empty until the first run. -->
+**Shell script regression tests**: Write small standalone `*.test.sh` files that stub external commands (ffmpeg, ffprobe, etc.) to provide controllable fixtures and verify error paths. Silent failures in shell scripts are hard to catch in integration tests; mutation tests on core assertions catch flipped comparisons and wrong constants that would otherwise rubber-stamp bad input (see `audio/check.assertions.test.sh`).
+
+**Cross-file constant synchronization**: When multiple scripts must stay in sync on a constant (like `WIDTH_TYPE` and `WIDTH` in `generate.sh` and `check.sh`), there is no shared source of truth — add a test that compares them at CI time. A divergence would silently make check.sh measure a different band than generate.sh touched.
+
+**System dependency versioning for determinism**: Pin the CI runner image (e.g., `ubuntu-24.04`, not `ubuntu-latest`) and separately check the tool version (e.g., ffmpeg major version). A different version of a determinism-critical tool (seeded noise generation) can silently change output across machines — only a fixed runner + explicit version check catches version drift without a PR diff.

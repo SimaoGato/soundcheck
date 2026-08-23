@@ -1,0 +1,118 @@
+#!/usr/bin/env bash
+# Generates the pink-noise EQ clip matrix: 10 frequencies x 6 gains = 60
+# clips, one octave-wide band boosted or cut per clip, plus an unprocessed
+# reference used only for check.sh's band-energy comparison.
+#
+# Originally validated against ffmpeg 7.0.x (static build) during refine;
+# CI pins ubuntu-24.04 (apt ffmpeg 6.1.x) and enforces
+# EXPECTED_FFMPEG_MAJOR=6 in .github/workflows/audio-checks.yml, and the
+# full AC1-AC7 suite passes there too — 6.1.x is the version this actually
+# runs against. A different ffmpeg version could in principle produce
+# different seeded noise output, breaking reproducibility (AC7) across
+# machines; the CI pin stops that from drifting silently on a future
+# Ubuntu image bump.
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+OUT_DIR="$ROOT_DIR/audio/output"
+WAV_DIR="$OUT_DIR/wav"
+REF_FILE="$OUT_DIR/reference.wav"
+
+FREQUENCIES=(31 62 125 250 500 1000 2000 4000 8000 16000)
+GAINS=(9 6 3 -3 -6 -9)
+SAMPLE_RATE=48000
+DURATION=2.5
+SEED=42
+# One octave wide, constant across all bands, so difficulty is set by gain
+# alone (per the story's technical notes). Must be kept equal to check.sh's
+# BAND_WIDTH_TYPE/BAND_WIDTH — there is no shared source of truth between
+# the two files.
+WIDTH_TYPE=o
+WIDTH=1
+# check.sh's loudnorm measurement pass (integrated_loudness/true_peak_db)
+# reads input_i/input_tp, which loudnorm measures from the actual audio and
+# doesn't depend on the I/TP/LRA target below, so the two files' loudnorm
+# targets don't need to match — noted here only so a future reader doesn't
+# assume they must.
+LOUDNORM="loudnorm=I=-18:TP=-1.5:LRA=7:linear=true"
+
+command -v ffmpeg >/dev/null 2>&1 || { echo "ffmpeg not found — install ffmpeg" >&2; exit 1; }
+
+# Filename convention: {freq:05d}hz_{sign}{gain:02d}db.wav — the
+# (frequency, gain) pair must be recoverable from the name alone.
+filename_for() {
+  local freq="$1" gain="$2" sign="+"
+  [ "$gain" -lt 0 ] && sign="-"
+  printf '%05dhz_%s%02ddb.wav' "$freq" "$sign" "${gain#-}"
+}
+
+generate_matrix() {
+  rm -rf "$OUT_DIR"
+  mkdir -p "$WAV_DIR"
+
+  ffmpeg -hide_banner -loglevel error -y \
+    -f lavfi -i "anoisesrc=color=pink:seed=${SEED}:duration=${DURATION}:sample_rate=${SAMPLE_RATE}" \
+    -ac 1 -ar "$SAMPLE_RATE" "$REF_FILE"
+
+  for freq in "${FREQUENCIES[@]}"; do
+    for gain in "${GAINS[@]}"; do
+      out="$WAV_DIR/$(filename_for "$freq" "$gain")"
+      ffmpeg -hide_banner -loglevel error -y -i "$REF_FILE" \
+        -af "equalizer=f=${freq}:width_type=${WIDTH_TYPE}:width=${WIDTH}:g=${gain},${LOUDNORM}" \
+        -ac 1 -ar "$SAMPLE_RATE" "$out"
+    done
+  done
+}
+
+# Confirms exactly 60 files exist, one per (frequency, gain) combo, none
+# missing or extra.
+verify_matrix() {
+  local expected=0 actual name failures=()
+  for freq in "${FREQUENCIES[@]}"; do
+    for gain in "${GAINS[@]}"; do
+      expected=$((expected + 1))
+      name="$(filename_for "$freq" "$gain")"
+      [ -f "$WAV_DIR/$name" ] || failures+=("missing: $name")
+    done
+  done
+  actual="$(find "$WAV_DIR" -maxdepth 1 -name '*.wav' | wc -l)"
+  [ "$actual" -eq "$expected" ] || failures+=("expected $expected files, found $actual")
+
+  if [ "${#failures[@]}" -gt 0 ]; then
+    echo "AC1 FAIL:" >&2
+    printf ' - %s\n' "${failures[@]}" >&2
+    return 1
+  fi
+  echo "AC1 PASS: $actual/$expected files present"
+}
+
+# Confirms two clean-state runs produce byte-identical output — generation
+# must be seeded, not random per-run.
+verify_determinism() {
+  local first second
+  generate_matrix
+  first="$(cd "$WAV_DIR" && sha256sum -- *.wav | sort)"
+  generate_matrix
+  second="$(cd "$WAV_DIR" && sha256sum -- *.wav | sort)"
+  if [ "$first" != "$second" ]; then
+    echo "AC7 FAIL: checksums differ between two clean-state runs" >&2
+    diff <(echo "$first") <(echo "$second") >&2
+    return 1
+  fi
+  echo "AC7 PASS: checksums identical across two clean-state runs"
+}
+
+case "${1:-}" in
+  --verify)
+    verify_determinism
+    verify_matrix
+    ;;
+  "")
+    generate_matrix
+    verify_matrix
+    ;;
+  *)
+    echo "unrecognized argument: $1 (expected --verify or no argument)" >&2
+    exit 1
+    ;;
+esac

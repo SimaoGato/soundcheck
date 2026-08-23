@@ -7,3 +7,4 @@ Dated bullets, one line each; a standalone `ADR-<NNN>-<slug>.md` in this same di
 - 2026-08-22: Paywall shown as a non-blocking dismissible banner every 5 questions, plus a persistent "Get full version" entry point — no modal gates, no session-count cutoff.
 - 2026-08-22: App name "Soundcheck" kept as final for v1; trademark/availability check deferred to pre-submission, not a build blocker.
 - 2026-08-22: Audio asset spec locked: 2.5s mono AAC ~64kbps clips, 60-clip paid-tier matrix (10 freq × 6 gain levels) ≈ 1.2MB total — no bitrate/format tuning needed at this size.
+- 2026-08-23: Band-to-broadband RMS ratio (not absolute band RMS) used for clip verification in check.sh AC2/AC3 — gain-invariant metric isolates EQ effect from loudnorm's broadband compensation, structural fix rather than parameter-tuning.
