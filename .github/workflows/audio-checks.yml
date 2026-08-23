@@ -13,12 +13,33 @@ on:
 
 jobs:
   generate-and-check:
-    runs-on: ubuntu-latest
+    # Pinned (not "ubuntu-latest"): generate.sh's header comment warns a
+    # different ffmpeg version can produce different seeded pink-noise
+    # output, breaking AC7 determinism across machines. "ubuntu-latest"
+    # floats to a new image over time with no PR diff, silently changing
+    # the apt-installed ffmpeg version; a fixed runner image only changes
+    # via a deliberate edit to this line.
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
 
       - name: Install ffmpeg
         run: sudo apt-get update && sudo apt-get install -y ffmpeg
+
+      # Belt-and-suspenders on top of the runs-on pin above: fails loudly if
+      # the ffmpeg major version ever drifts from what AC7 was validated
+      # against (e.g. a Canonical point release), instead of silently
+      # producing different pink-noise output. Update EXPECTED_FFMPEG_MAJOR
+      # (and re-verify AC7) if this ever needs to change.
+      - name: Verify pinned ffmpeg version
+        run: |
+          EXPECTED_FFMPEG_MAJOR=6
+          actual="$(ffmpeg -version | head -1)"
+          echo "$actual"
+          echo "$actual" | grep -qE "^ffmpeg version ${EXPECTED_FFMPEG_MAJOR}\." || {
+            echo "ffmpeg major version drifted from the pinned ${EXPECTED_FFMPEG_MAJOR}.x — AC7 determinism is only validated against ${EXPECTED_FFMPEG_MAJOR}.x. Re-verify determinism and update EXPECTED_FFMPEG_MAJOR (and generate.sh's header comment) if intentional." >&2
+            exit 1
+          }
 
       - name: Generate clip matrix (AC1, AC7)
         run: ./audio/generate.sh --verify
@@ -34,3 +55,6 @@ jobs:
 
       - name: generate.sh/check.sh band width sync test
         run: ./audio/width_sync.test.sh
+
+      - name: CI ffmpeg pin test
+        run: ./audio/ci_ffmpeg_pin.test.sh

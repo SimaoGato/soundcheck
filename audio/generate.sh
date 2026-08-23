@@ -5,7 +5,9 @@
 #
 # Validated against ffmpeg 7.0.x (static build); a different ffmpeg version
 # could in principle produce different seeded noise output, breaking
-# reproducibility (AC7) across machines.
+# reproducibility (AC7) across machines. CI pins its runner image and
+# ffmpeg's major version (see .github/workflows/audio-checks.yml) so this
+# can't drift silently on a future Ubuntu image bump.
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
