@@ -94,10 +94,17 @@ verify_determinism() {
   echo "AC7 PASS: checksums identical across two clean-state runs"
 }
 
-if [ "${1:-}" = "--verify" ]; then
-  verify_determinism
-  verify_matrix
-else
-  generate_matrix
-  verify_matrix
-fi
+case "${1:-}" in
+  --verify)
+    verify_determinism
+    verify_matrix
+    ;;
+  "")
+    generate_matrix
+    verify_matrix
+    ;;
+  *)
+    echo "unrecognized argument: $1 (expected --verify or no argument)" >&2
+    exit 1
+    ;;
+esac
