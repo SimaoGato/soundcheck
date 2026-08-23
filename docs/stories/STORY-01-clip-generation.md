@@ -1,8 +1,8 @@
 ---
 id: STORY-01
 epic: EPIC-01
-status: draft
-pr: null
+status: in_review
+pr: 1
 ---
 
 # Generate the normalized pink-noise EQ clip matrix
