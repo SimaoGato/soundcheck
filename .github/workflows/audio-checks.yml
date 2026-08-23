@@ -50,6 +50,9 @@ jobs:
       - name: check.sh unit test
         run: ./audio/check.band_ratio_db.test.sh
 
+      - name: check.sh assertion mutation tests
+        run: ./audio/check.assertions.test.sh
+
       - name: generate.sh unit test
         run: ./audio/generate.args.test.sh
 
