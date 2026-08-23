@@ -26,6 +26,13 @@ LOUDNESS_SPREAD_MAX_LU=0.5
 BAND_WIDTH_TYPE=o
 BAND_WIDTH=1
 
+# ratio_of/ref_ratio_of below need `declare -A` (bash 4+). macOS's stock
+# /bin/bash is 3.2 (Apple ships no newer GPLv3 bash), which lacks it and
+# fails with a cryptic "declare: -A: invalid option" — so fail loud with a
+# clear message instead, mirroring the ffmpeg/ffprobe guards below. Install
+# a newer bash (e.g. `brew install bash`) and run this script with it.
+((BASH_VERSINFO[0] >= 4)) || { echo "bash 4+ required (found ${BASH_VERSION}) — on macOS, run: brew install bash && /opt/homebrew/bin/bash $0 $*" >&2; exit 1; }
+
 command -v ffmpeg >/dev/null 2>&1 || { echo "ffmpeg not found — install ffmpeg" >&2; exit 1; }
 command -v ffprobe >/dev/null 2>&1 || { echo "ffprobe not found — install ffmpeg" >&2; exit 1; }
 [ -f "$REF" ] || { echo "reference file not found: $REF" >&2; exit 1; }
