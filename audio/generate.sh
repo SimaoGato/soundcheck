@@ -33,7 +33,8 @@ LOUDNORM="loudnorm=I=-18:TP=-1.5:LRA=7:linear=true"
 
 command -v ffmpeg >/dev/null 2>&1 || { echo "ffmpeg not found — install ffmpeg" >&2; exit 1; }
 
-# AC1's filename convention: {freq:05d}hz_{sign}{gain:02d}db.wav.
+# Filename convention: {freq:05d}hz_{sign}{gain:02d}db.wav — the
+# (frequency, gain) pair must be recoverable from the name alone.
 filename_for() {
   local freq="$1" gain="$2" sign="+"
   [ "$gain" -lt 0 ] && sign="-"
@@ -58,7 +59,8 @@ generate_matrix() {
   done
 }
 
-# AC1: exactly 60 files, one per (frequency, gain) combo, none missing/extra.
+# Confirms exactly 60 files exist, one per (frequency, gain) combo, none
+# missing or extra.
 verify_matrix() {
   local expected=0 actual name failures=()
   for freq in "${FREQUENCIES[@]}"; do
@@ -79,7 +81,8 @@ verify_matrix() {
   echo "AC1 PASS: $actual/$expected files present"
 }
 
-# AC7: two clean-state runs must produce byte-identical output.
+# Confirms two clean-state runs produce byte-identical output — generation
+# must be seeded, not random per-run.
 verify_determinism() {
   local first second
   generate_matrix
