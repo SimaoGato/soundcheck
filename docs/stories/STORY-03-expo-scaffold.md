@@ -157,12 +157,17 @@ several non-obvious footguns on the current toolchain (`expo@~57.0.15`,
    Done) vacuously true for this PR — nothing currently runs on
    `package.json`/`App.tsx` changes. That's a real gap, but it isn't this
    story's call to close by unilaterally overriding its own Out-of-scope
-   bullet. **Follow-up needed:** either amend this story's Out-of-scope
-   wording with explicit story-owner/human sign-off before implementation,
-   or file a separate follow-up story (e.g. "add `app-checks.yml` CI
-   workflow") to add `.github/workflows/app-checks.yml` mirroring
-   `audio-checks.yml`'s pattern (pinned runner, scoped `paths:` filters,
-   `npm ci` / typecheck / lint / test steps) once scope is agreed.
+   bullet. **Follow-up filed now, not left open-ended:**
+   `docs/stories/CHORE-01-app-checks-workflow.md` — add
+   `.github/workflows/app-checks.yml` mirroring `audio-checks.yml`'s pattern
+   (pinned runner, scoped `paths:` filters, `npm ci` / typecheck / lint /
+   test steps). Filed as a chore (not just a prose TODO) because STORY-04
+   onward builds directly on this scaffold with no CI safety net until it
+   lands. Until CHORE-01 ships, **the human manual-verification step on this
+   PR, and on any PR touching `package.json`/`App.tsx`/app source before
+   CHORE-01 merges, must explicitly acknowledge that CI does not check app
+   code and confirm `npm run typecheck` / `npm run lint` / `npm test` were
+   run locally before approving** — this is not implicit in "CI is green."
 
 ### Steps (test-first where the AC allows it)
 
@@ -267,11 +272,16 @@ several non-obvious footguns on the current toolchain (`expo@~57.0.15`,
 - **No CI workflow ships with this story (see Design decision 5), so "CI is
   green on the PR" is vacuously true for this PR** — no check currently runs
   against `package.json`/`App.tsx` changes. This is a known gap, not an
-  oversight: closing it requires either amending this story's Out-of-scope
-  wording (needs explicit story-owner/human sign-off) or a separate
-  follow-up story to add `.github/workflows/app-checks.yml`. Flagging for
-  the story owner before this ships; not a reason to block this story's own
-  scaffold work.
+  oversight: the follow-up is filed now as
+  `docs/stories/CHORE-01-app-checks-workflow.md` rather than left
+  unscheduled, since STORY-04 onward builds directly on this scaffold with
+  no CI safety net until it lands. **Before promoting this PR, the human
+  manual-verification step must explicitly acknowledge this trade-off** —
+  i.e. confirm they understand no CI check ran against this PR's app code,
+  and that they (or QA) ran `npm run typecheck` / `npm run lint` / `npm
+  test` locally as a substitute. Not a reason to block this story's own
+  scaffold work, but it is a reason to not silently treat "CI is green"
+  (vacuous, in this case) as sufficient.
 - **Rollback:** every artifact this story adds is new (no existing file is
   behaviorally changed except `.gitignore`, appended-only, and CLAUDE.md's
   Environments section). Reverting is `git rm` the new files/dirs
