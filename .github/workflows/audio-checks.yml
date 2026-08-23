@@ -31,3 +31,6 @@ jobs:
 
       - name: generate.sh unit test
         run: ./audio/generate.args.test.sh
+
+      - name: generate.sh/check.sh band width sync test
+        run: ./audio/width_sync.test.sh
