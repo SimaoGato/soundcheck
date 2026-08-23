@@ -1,8 +1,8 @@
 ---
 id: STORY-03
 epic: EPIC-02
-status: draft
-pr: null
+status: in_review
+pr: 4
 ---
 
 # Expo + TypeScript app scaffold with working quality gates
