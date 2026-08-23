@@ -3,11 +3,14 @@
 # clips, one octave-wide band boosted or cut per clip, plus an unprocessed
 # reference used only for check.sh's band-energy comparison.
 #
-# Validated against ffmpeg 7.0.x (static build); a different ffmpeg version
-# could in principle produce different seeded noise output, breaking
-# reproducibility (AC7) across machines. CI pins its runner image and
-# ffmpeg's major version (see .github/workflows/audio-checks.yml) so this
-# can't drift silently on a future Ubuntu image bump.
+# Originally validated against ffmpeg 7.0.x (static build) during refine;
+# CI pins ubuntu-24.04 (apt ffmpeg 6.1.x) and enforces
+# EXPECTED_FFMPEG_MAJOR=6 in .github/workflows/audio-checks.yml, and the
+# full AC1-AC7 suite passes there too — 6.1.x is the version this actually
+# runs against. A different ffmpeg version could in principle produce
+# different seeded noise output, breaking reproducibility (AC7) across
+# machines; the CI pin stops that from drifting silently on a future
+# Ubuntu image bump.
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
