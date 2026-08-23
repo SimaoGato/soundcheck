@@ -63,8 +63,9 @@ integrated_loudness() {
 }
 
 # Band-to-broadband RMS ratio: gain-invariant, so it isolates the EQ's
-# effect from loudnorm's broadband compensation (see story's plan for why
-# absolute RMS against the reference doesn't work).
+# effect from loudnorm's broadband compensation. Absolute RMS against the
+# reference doesn't work here because loudnorm renormalizes overall level,
+# masking the EQ's effect on the boosted/cut band.
 band_ratio_db() {
   local file="$1" freq="$2"
   local band broadband
@@ -99,23 +100,23 @@ for file in "${files[@]}"; do
   gain="$((10#${BASH_REMATCH[3]}))"
   [ "$sign" = "-" ] && gain=$((-gain))
 
-  # AC5: duration
+  # Duration check
   dur="$(duration_s "$file")"
   if ! awk -v d="$dur" -v t="$DURATION_TARGET" -v tol="$DURATION_TOLERANCE" \
       'BEGIN { exit !(d >= t - tol && d <= t + tol) }'; then
     failures+=("$name: duration ${dur}s outside ${DURATION_TARGET}s +/- ${DURATION_TOLERANCE}s")
   fi
 
-  # AC4/AC6 share one loudnorm measurement pass per file.
+  # Loudness and true-peak checks share one loudnorm measurement pass per file.
   measure="$(loudnorm_measure "$file")"
 
-  # AC6: true peak headroom
+  # True peak headroom check
   peak="$(true_peak_db "$measure")"
   if ! awk -v p="$peak" -v max="$PEAK_MAX_DB" 'BEGIN { exit !(p <= max) }'; then
     failures+=("$name: true peak ${peak}dB exceeds ${PEAK_MAX_DB}dB headroom limit")
   fi
 
-  # AC4: collect integrated loudness, spread checked after the loop
+  # Collect integrated loudness; spread is checked after the loop.
   loud="$(integrated_loudness "$measure")"
   if [ -z "$min_loudness" ] || awk -v l="$loud" -v m="$min_loudness" 'BEGIN { exit !(l < m) }'; then
     min_loudness="$loud"
@@ -124,8 +125,8 @@ for file in "${files[@]}"; do
     max_loudness="$loud"
   fi
 
-  # AC2/AC3: band-to-broadband ratio vs. reference, collected for the
-  # cross-file (vs.-reference and monotonicity) checks after the loop.
+  # Band-to-broadband ratio vs. reference, collected for the cross-file
+  # (vs.-reference and monotonicity) checks after the loop.
   ratio="$(band_ratio_db "$file" "$freq")"
   ratio_of["${freq}_${gain}"]="$ratio"
   if [[ ! " ${freqs_seen[*]:-} " == *" $freq "* ]]; then
@@ -146,7 +147,7 @@ for file in "${files[@]}"; do
   fi
 done
 
-# AC4: loudness spread across the whole set
+# Loudness spread across the whole set
 if [ -n "$min_loudness" ]; then
   spread="$(awk -v mn="$min_loudness" -v mx="$max_loudness" 'BEGIN { print mx - mn }')"
   if ! awk -v s="$spread" -v max="$LOUDNESS_SPREAD_MAX_LU" 'BEGIN { exit !(s <= max) }'; then
@@ -154,7 +155,7 @@ if [ -n "$min_loudness" ]; then
   fi
 fi
 
-# AC2/AC3: monotonic across +3->+6->+9 and -3->-6->-9, per frequency
+# Monotonic across +3->+6->+9 and -3->-6->-9, per frequency
 for freq in "${freqs_seen[@]}"; do
   r3="${ratio_of[${freq}_3]:-}"
   r6="${ratio_of[${freq}_6]:-}"
