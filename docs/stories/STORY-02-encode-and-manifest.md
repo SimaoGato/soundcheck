@@ -1,8 +1,8 @@
 ---
 id: STORY-02
 epic: EPIC-01
-status: draft
-pr: null
+status: in_review
+pr: 2
 ---
 
 # Encode the clip matrix and emit an app-facing manifest
