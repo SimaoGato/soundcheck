@@ -34,13 +34,16 @@ touching `package.json`/`App.tsx`/app source must explicitly confirm it ran
 
 1. Given a PR that changes app files (`package.json`, `app.json`,
    `tsconfig.json`, `App.tsx`, or other app source paths), when CI runs,
-   then it executes `npm ci`, `npm run typecheck`, `npm run lint`, and
-   `npm test`, mirroring `audio-checks.yml`'s pattern (pinned runner image,
-   scoped `paths:` filters, one step per check).
+   then it executes `npm ci`, `npm run typecheck`, `npm run lint`,
+   `npm test`, and `./nvmrc_engines_sync.test.sh` (STORY-03's `.nvmrc`
+   regression test, currently unwired to any workflow — see STORY-03 PR #4
+   review), mirroring `audio-checks.yml`'s pattern (pinned runner image,
+   scoped `paths:` filters, one step per check, including one explicit step
+   per `*.test.sh`).
 2. Given a PR that only touches unrelated paths (e.g. `audio/**`,
    `docs/**`), when CI runs, then this workflow does not run (scoped
    `paths:` filters, same pattern as `audio-checks.yml`).
-3. Given any of the four steps fails, when CI reports status, then the
+3. Given any of the five steps fails, when CI reports status, then the
    workflow run fails (not a silent pass) — verified by intentionally
    breaking one check (e.g. a lint error) on a scratch branch and observing
    a red run before merging the workflow.
@@ -55,6 +58,14 @@ touching `package.json`/`App.tsx`/app source must explicitly confirm it ran
 - Mirror `.github/workflows/audio-checks.yml`: pinned `runs-on` (not
   `ubuntu-latest`), `paths:` filters on both `pull_request` and
   `push: branches: [main]`.
+- Include `.nvmrc` in the `paths:` filters (alongside `package.json`,
+  `app.json`, `tsconfig.json`, app source) — `nvmrc_engines_sync.test.sh`
+  reads `.nvmrc` and would otherwise not trigger a run if `.nvmrc` alone
+  changed.
+- Add a dedicated `.nvmrc` / engines sync test step —
+  `run: ./nvmrc_engines_sync.test.sh` — as its own step (not folded into
+  the typecheck/lint/test steps), matching `audio-checks.yml`'s one-step-
+  per-`*.test.sh` pattern.
 - Affected areas: new `.github/workflows/app-checks.yml` only.
 
 ## Definition of Done
