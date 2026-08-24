@@ -83,19 +83,28 @@ If none of those apply, it belongs in the log, not a document. This keeps
 `docs/adr/` from accumulating a file per story for decisions nobody will ever
 need to re-read.
 
-## Environments (optional — delete this section if it doesn't apply)
+## Environments
 
-Fill in if this project has meaningfully different environments (e.g. a
-deployed service with dev/staging/prod); delete it entirely if it doesn't
-(e.g. a library or CLI with no deployment target). `qa-verifier` checks for
-this section and verifies against the environment it names for QA, defaulting
-to local/dev if the section is absent.
+This project has no deployed environment — it's an Android app (EPIC-05
+covers store release). Only local dev exists today.
 
 | Environment | URL / how to target it | Used for |
 |---|---|---|
-| dev | e.g. `localhost:3000`, run `npm run dev` | day-to-day dev, QA stage default |
-| staging | e.g. `https://staging.example.com` | pre-promotion manual verification |
-| production | e.g. `https://example.com` | live — never targeted by the pipeline |
+| dev | `npm run android` (or `npx expo start --android`), then open on an Android emulator or a device running Expo Go | day-to-day dev, QA stage default |
+| staging | not applicable | — |
+| production | not applicable — future Play Store release is EPIC-05 | — |
+
+Requires Node `>=20.19.4` (see `package.json`'s `engines`). This sandbox's
+default `node` (from `~/.local/node`, ahead of `nvm` on `PATH`) is v20.11.1,
+below that floor. `expo lint` no-ops silently on it — which is why the `lint`
+npm script calls `eslint` directly instead of `expo lint` — but `expo start
+--android` / `npm run android` **crash outright** on v20.11.1 with
+`TypeError: _util.default.styleText is not a function` (Metro's reporter
+calls `util.styleText`, added in Node v20.12): there is no warning-banner
+path for that one. `nvm` on this machine already has newer versions
+installed; run `nvm use` (picks up this repo's `.nvmrc`) before `npm run
+android` / `expo start --android` so dev mode actually reaches a running
+Metro session.
 
 If this project has a UI, add the Playwright MCP (see this plugin's README →
 "Optional MCP servers") so `qa-verifier` can screenshot and sanity-check it

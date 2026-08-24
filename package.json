@@ -1,0 +1,39 @@
+{
+  "name": "soundcheck",
+  "version": "1.0.0",
+  "main": "index.ts",
+  "engines": {
+    "node": ">=20.19.4"
+  },
+  "dependencies": {
+    "expo": "~57.0.15",
+    "expo-status-bar": "~57.0.1",
+    "react": "19.2.3",
+    "react-native": "0.86.2"
+  },
+  "devDependencies": {
+    "@testing-library/react-native": "^14.0.1",
+    "@types/jest": "^30.0.0",
+    "@types/react": "~19.2.2",
+    "eslint": "^9.39.5",
+    "eslint-config-expo": "~57.0.1",
+    "jest": "^29.7.0",
+    "jest-expo": "^57.0.4",
+    "react-test-renderer": "19.2.3",
+    "typescript": "~6.0.3"
+  },
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "jest",
+    "test:nvmrc": "./nvmrc_engines_sync.test.sh"
+  },
+  "jest": {
+    "preset": "jest-expo"
+  },
+  "private": true
+}
