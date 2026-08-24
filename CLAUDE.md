@@ -95,10 +95,16 @@ covers store release). Only local dev exists today.
 | production | not applicable — future Play Store release is EPIC-05 | — |
 
 Requires Node `>=20.19.4` (see `package.json`'s `engines`). This sandbox's
-default `node` is below that: `expo start` still runs with a non-blocking
-warning banner, but `expo lint` specifically no-ops silently on old Node —
-which is why the `lint` npm script calls `eslint` directly instead of
-`expo lint`.
+default `node` (from `~/.local/node`, ahead of `nvm` on `PATH`) is v20.11.1,
+below that floor. `expo lint` no-ops silently on it — which is why the `lint`
+npm script calls `eslint` directly instead of `expo lint` — but `expo start
+--android` / `npm run android` **crash outright** on v20.11.1 with
+`TypeError: _util.default.styleText is not a function` (Metro's reporter
+calls `util.styleText`, added in Node v20.12): there is no warning-banner
+path for that one. `nvm` on this machine already has newer versions
+installed; run `nvm use` (picks up this repo's `.nvmrc`) before `npm run
+android` / `expo start --android` so dev mode actually reaches a running
+Metro session.
 
 If this project has a UI, add the Playwright MCP (see this plugin's README →
 "Optional MCP servers") so `qa-verifier` can screenshot and sanity-check it
