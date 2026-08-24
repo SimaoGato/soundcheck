@@ -281,7 +281,15 @@ several non-obvious footguns on the current toolchain (`expo@~57.0.15`,
   and that they (or QA) ran `npm run typecheck` / `npm run lint` / `npm
   test` locally as a substitute. Not a reason to block this story's own
   scaffold work, but it is a reason to not silently treat "CI is green"
-  (vacuous, in this case) as sufficient.
+  (vacuous, in this case) as sufficient. **PR #4 review follow-up:**
+  `nvmrc_engines_sync.test.sh` was also not invoked by any npm script,
+  making it easy to forget as part of that local substitute. Added
+  `"test:nvmrc": "./nvmrc_engines_sync.test.sh"` so `npm run test:nvmrc` is
+  discoverable and part of the manual-verification checklist. This does
+  *not* wire it into CI — that remains CHORE-01 AC1's job (a dedicated
+  workflow step, deliberately not folded into `test`, per CHORE-01's
+  Technical notes) — so the CI gap itself is unchanged and still requires
+  CHORE-01 to close.
 - **Rollback:** every artifact this story adds is new (no existing file is
   behaviorally changed except `.gitignore`, appended-only, and CLAUDE.md's
   Environments section). Reverting is `git rm` the new files/dirs

@@ -29,7 +29,8 @@
     "web": "expo start --web",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "jest"
+    "test": "jest",
+    "test:nvmrc": "./nvmrc_engines_sync.test.sh"
   },
   "jest": {
     "preset": "jest-expo"
